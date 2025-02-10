@@ -7,6 +7,7 @@ export interface User {
   token: string;
 }
 
+
 interface UserContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
