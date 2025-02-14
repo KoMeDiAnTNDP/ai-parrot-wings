@@ -1,116 +1,151 @@
 // src/api.ts
 
-// Types for registration data.
+// --- Type Definitions ---
+
+// For user registration (CreateNewUser schema)
 export interface RegistrationData {
-    email: string;
-    nickname: string;
-    password: string;
-    confirmPassword: string;
+  email: string;
+  username: string;
+  password: string;
+}
+
+// For login/session creation (CreateSesstion schema)
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+// The token response returned from registration/login (IdTokenResponse)
+export interface IdTokenResponse {
+  id_token: string;
+}
+
+// User info returned by the protected endpoint (UserInfoResponse)
+export interface UserInfo {
+  id: number;
+  name: string;
+  email: string;
+  balance: number;
+}
+export interface UserInfoResponse {
+  user_info_token: UserInfo;
+}
+
+// For listing users (GetUsersRequest & GetUsersResponse)
+export interface GetUsersRequest {
+  filter: string;
+}
+export interface UserItem {
+  id: string;
+  name: string;
+}
+export type GetUsersResponse = UserItem[];
+
+// For creating a transaction (CreateTransactionRequest & CreateTransactionResponse)
+export interface CreateTransactionRequest {
+  name: string; // Recipient's username
+  amount: number;
+}
+export interface Transaction {
+  id: number;
+  date: string;
+  username: string;
+  amount: number;
+  balance: number;
+}
+export interface CreateTransactionResponse {
+  trans_token: Transaction;
+}
+
+// For retrieving transactions (GetTransactionsResponse)
+export interface GetTransactionsResponse {
+  trans_token: Transaction[];
+}
+
+// --- Base API URL ---
+const API_BASE = "http://0.0.0.0:3001"; // Adjust as needed
+
+// --- API Functions ---
+
+// Register a new user. Calls POST /users.
+export async function registerUser(data: RegistrationData): Promise<IdTokenResponse> {
+  const response = await fetch(`${API_BASE}/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to register user");
   }
-  
-  // Types for login.
-  export interface LoginCredentials {
-    email: string;
-    password: string;
+  return response.json();
+}
+
+// Login (or create session) using credentials. Calls POST /sessions/create.
+export async function loginUser(credentials: LoginCredentials): Promise<IdTokenResponse> {
+  const response = await fetch(`${API_BASE}/sessions/create`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(credentials),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to log in");
   }
-  
-  export interface UserResponse {
-    name: string;
-    balance: number;
+  return response.json();
+}
+
+// Retrieve user info for the authenticated user. Calls GET /api/protected/user-info.
+export async function getUserInfo(token: string): Promise<UserInfoResponse> {
+  const response = await fetch(`${API_BASE}/api/protected/user-info`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch user info");
   }
-  
-  export interface LoginResponse {
-    success: boolean;
-    token: string;
-    user: UserResponse;
+  return response.json();
+}
+
+// Retrieve a list of users filtered by name. Calls POST /api/protected/users/list.
+export async function getUsersList(filter: string, token: string): Promise<GetUsersResponse> {
+  const response = await fetch(`${API_BASE}/api/protected/users/list`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ filter }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to get users list");
   }
-  
-  // Types for transactions.
-  export interface TransactionData {
-    recipientId: number;
-    recipientName: string;
-    amount: number;
+  return response.json();
+}
+
+// Create a new transaction (PW transfer). Calls POST /api/protected/transactions.
+export async function createTransaction(
+  data: CreateTransactionRequest,
+  token: string
+): Promise<CreateTransactionResponse> {
+  const response = await fetch(`${API_BASE}/api/protected/transactions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to create transaction");
   }
-  
-  export interface Transaction {
-    date: string;
-    correspondent: string;
-    amount: number;
-    balance: number;
+  return response.json();
+}
+
+// Retrieve all transactions for the current user. Calls GET /api/protected/transactions.
+export async function getTransactions(token: string): Promise<GetTransactionsResponse> {
+  const response = await fetch(`${API_BASE}/api/protected/transactions`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to get transactions");
   }
-  
-  // User item for autocomplete.
-  export interface UserItem {
-    id: number;
-    name: string;
-  }
-  
-  // Dummy API implementations.
-  
-  export const registerUser = async (data: RegistrationData): Promise<{ success: boolean }> => {
-    console.log("Registering user:", data);
-    return Promise.resolve({ success: true });
-  };
-  
-  export const loginUser = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    console.log("Logging in with:", credentials);
-    return Promise.resolve({
-      success: true,
-      token: "dummy-token",
-      user: { name: "John Doe", balance: 1000 }
-    });
-  };
-  
-  export const getUserDetails = async (token: string): Promise<UserResponse> => {
-    return Promise.resolve({ name: "John Doe", balance: 1000 });
-  };
-  
-  export const getUsersList = async (query: string): Promise<UserItem[]> => {
-    const dummyUsers: UserItem[] = [
-      { id: 1, name: "Alice Smith" },
-      { id: 2, name: "Bob Johnson" },
-      { id: 3, name: "Charlie Brown" }
-    ];
-    return Promise.resolve(
-      dummyUsers.filter(user =>
-        user.name.toLowerCase().includes(query.toLowerCase())
-      )
-    );
-  };
-  
-  export const createTransaction = async (
-    token: string,
-    transactionData: TransactionData
-  ): Promise<{ success: boolean; newBalance: number; transaction: Transaction }> => {
-    console.log("Creating transaction:", transactionData);
-    const newBalance = 1000 - transactionData.amount; // Dummy logic.
-    return Promise.resolve({
-      success: true,
-      newBalance,
-      transaction: {
-        date: new Date().toLocaleString(),
-        correspondent: transactionData.recipientName,
-        amount: -transactionData.amount,
-        balance: newBalance
-      }
-    });
-  };
-  
-  export const getTransactionHistory = async (token: string): Promise<Transaction[]> => {
-    const dummyTransactions: Transaction[] = [
-      {
-        date: new Date().toLocaleString(),
-        correspondent: "Alice Smith",
-        amount: -100,
-        balance: 900
-      },
-      {
-        date: new Date().toLocaleString(),
-        correspondent: "Bob Johnson",
-        amount: 200,
-        balance: 1000
-      }
-    ];
-    return Promise.resolve(dummyTransactions);
-  };
-  
+  return response.json();
+}

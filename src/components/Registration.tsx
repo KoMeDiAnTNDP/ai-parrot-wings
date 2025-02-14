@@ -5,11 +5,11 @@ import { registerUser, RegistrationData } from '../api';
 import { useNavigate } from 'react-router-dom';
 
 const Registration: React.FC = () => {
-  const [form, setForm] = useState<RegistrationData>({
+  const [form, setForm] = useState({
     email: '',
-    nickname: '',
+    username: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
@@ -25,12 +25,15 @@ const Registration: React.FC = () => {
       return;
     }
     try {
-      const res = await registerUser(form);
-      if (res.success) {
-        navigate('/login');
-      } else {
-        setError('Registration failed');
-      }
+      // Prepare the registration data (omit confirmPassword)
+      const regData: RegistrationData = {
+        email: form.email,
+        username: form.username,
+        password: form.password,
+      };
+      await registerUser(regData);
+      // On success, navigate to login.
+      navigate('/login');
     } catch (err) {
       setError('Registration failed');
     }
@@ -55,12 +58,12 @@ const Registration: React.FC = () => {
             required
           />
           <TextField
-            label="Nickname"
+            label="Username"
             variant="outlined"
             fullWidth
             margin="normal"
-            name="nickname"
-            value={form.nickname}
+            name="username"
+            value={form.username}
             onChange={handleChange}
             required
           />

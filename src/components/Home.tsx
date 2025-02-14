@@ -13,10 +13,23 @@ import {
   Divider
 } from '@mui/material';
 import { UserContext } from '../UserContext';
-import { getUsersList, createTransaction, getTransactionHistory, UserItem, Transaction } from '../api';
+import {
+  getUserInfo,
+  getUsersList,
+  createTransaction,
+  getTransactions,
+  UserInfoResponse,
+  GetUsersResponse,
+  CreateTransactionRequest,
+  CreateTransactionResponse,
+  GetTransactionsResponse,
+  UserItem,
+  Transaction,
+} from '../api';
 
 const Home: React.FC = () => {
-  const { user, setUser } = useContext(UserContext);
+  const { user } = useContext(UserContext);
+  const [userInfo, setUserInfo] = useState<any>(null);
   const [recipientQuery, setRecipientQuery] = useState<string>('');
   const [recipientOptions, setRecipientOptions] = useState<UserItem[]>([]);
   const [selectedRecipient, setSelectedRecipient] = useState<UserItem | null>(null);
@@ -24,80 +37,60 @@ const Home: React.FC = () => {
   const [transactionError, setTransactionError] = useState<string>('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // Fetch transaction history on mount.
+  // Fetch user info on mount.
   useEffect(() => {
-    fetchTransactions();
-  }, []);
-
-  const fetchTransactions = async () => {
-    if (!user) return;
-    try {
-      const history = await getTransactionHistory(user.token);
-      setTransactions(history);
-    } catch (err) {
-      console.error("Failed to fetch transaction history", err);
+    if (user?.token) {
+      getUserInfo(user.token)
+        .then((data: UserInfoResponse) => setUserInfo(data.user_info_token))
+        .catch(err => console.error("Failed to fetch user info:", err));
     }
-  };
+  }, [user]);
+
+  // Fetch transactions on mount.
+  useEffect(() => {
+    if (user?.token) {
+      getTransactions(user.token)
+        .then((data: GetTransactionsResponse) => setTransactions(data.trans_token))
+        .catch(err => console.error("Failed to fetch transactions:", err));
+    }
+  }, [user]);
 
   // Fetch recipient suggestions when the query changes.
   useEffect(() => {
-    if (recipientQuery.length > 0) {
-      fetchUsers(recipientQuery);
+    if (recipientQuery.length > 0 && user?.token) {
+      getUsersList(recipientQuery, user.token)
+        .then((data: GetUsersResponse) => setRecipientOptions(data))
+        .catch(err => console.error("Failed to fetch users:", err));
     } else {
       setRecipientOptions([]);
     }
-  }, [recipientQuery]);
-
-  const fetchUsers = async (query: string) => {
-    if (!user) return;
-    try {
-      const users = await getUsersList(query);
-      // Optionally, filter out the current user.
-      const filtered = users.filter(u => u.name !== user.name);
-      setRecipientOptions(filtered);
-    } catch (err) {
-      console.error("Failed to fetch users", err);
-    }
-  };
+  }, [recipientQuery, user]);
 
   const handleTransactionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTransactionError('');
-
+    if (!user?.token) return;
     const txAmount = parseFloat(amount);
     if (isNaN(txAmount) || txAmount <= 0) {
       setTransactionError("Please enter a valid amount.");
       return;
     }
-
-    if (!user || txAmount > user.balance) {
-      setTransactionError("Transaction amount exceeds your current balance.");
-      return;
-    }
-
     if (!selectedRecipient) {
       setTransactionError("Please select a recipient.");
       return;
     }
-
+    const transactionData: CreateTransactionRequest = {
+      name: selectedRecipient.name,
+      amount: txAmount,
+    };
     try {
-      const transactionData = {
-        recipientId: selectedRecipient.id,
-        recipientName: selectedRecipient.name,
-        amount: txAmount
-      };
-
-      const res = await createTransaction(user.token, transactionData);
-      if (res.success) {
-        setUser({ ...user, balance: res.newBalance });
-        setTransactions(prev => [res.transaction, ...prev]);
-        // Reset the form.
-        setSelectedRecipient(null);
-        setRecipientQuery('');
-        setAmount('');
-      } else {
-        setTransactionError("Transaction failed.");
-      }
+      const res: CreateTransactionResponse = await createTransaction(transactionData, user.token);
+      // Append the new transaction to the list.
+      setTransactions(prev => [res.trans_token, ...prev]);
+      // Reset the form fields.
+      setSelectedRecipient(null);
+      setRecipientQuery('');
+      setAmount('');
     } catch (err) {
       setTransactionError("Transaction failed.");
     }
@@ -106,8 +99,12 @@ const Home: React.FC = () => {
   return (
     <Container maxWidth="md">
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h5">Welcome, {user?.name}</Typography>
-        <Typography variant="h6">Current PW Balance: {user?.balance}</Typography>
+        <Typography variant="h5">
+          Welcome, {userInfo ? userInfo.name : "Loading..."}
+        </Typography>
+        <Typography variant="h6">
+          Current PW Balance: {userInfo ? userInfo.balance : "Loading..."}
+        </Typography>
       </Box>
 
       <Box sx={{ mt: 4, p: 2, border: "1px solid #ccc", borderRadius: "8px" }}>
@@ -152,7 +149,7 @@ const Home: React.FC = () => {
               <React.Fragment key={index}>
                 <ListItem alignItems="flex-start">
                   <ListItemText
-                    primary={`${tx.date} - ${tx.correspondent}`}
+                    primary={`${tx.date} - ${tx.username}`}
                     secondary={
                       <>
                         <Typography variant="body2" color={tx.amount < 0 ? "error" : "primary"}>

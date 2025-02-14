@@ -1,7 +1,7 @@
 // src/components/Login.tsx
 import React, { useState, useContext } from 'react';
 import { TextField, Button, Container, Typography, Box } from '@mui/material';
-import { loginUser, LoginCredentials } from '../api';
+import { loginUser, LoginCredentials, IdTokenResponse } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../UserContext';
 
@@ -18,17 +18,10 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await loginUser(form);
-      if (res.success) {
-        setUser({
-          name: res.user.name,
-          balance: res.user.balance,
-          token: res.token
-        });
-        navigate('/home');
-      } else {
-        setError('Login failed');
-      }
+      const data: IdTokenResponse = await loginUser(form);
+      // Save the token in the context (you might also fetch user info here)
+      setUser({ token: data.id_token });
+      navigate('/home');
     } catch (err) {
       setError('Login failed');
     }

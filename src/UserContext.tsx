@@ -2,11 +2,9 @@
 import React, { createContext, useState, ReactNode } from 'react';
 
 export interface User {
-  name: string;
-  balance: number;
   token: string;
+  // Optionally add more fields such as name, email, balance, etc.
 }
-
 
 interface UserContextType {
   user: User | null;
