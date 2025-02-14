@@ -1,0 +1,84 @@
+/* === GLOBAL STYLES === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+/* === BODY === */
+body {
+  background-color: #F0F2F5; /* Matches design */
+  color: #333;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === LINKS === */
+a {
+  text-decoration: none;
+  color: #007BFF;
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: #0056b3;
+}
+
+/* === BUTTONS === */
+button {
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Material UI Button Overrides */
+.MuiButton-root {
+  text-transform: none !important;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 16px;
+}
+
+.MuiButton-containedPrimary {
+  background-color: #007BFF !important;
+}
+
+.MuiButton-containedPrimary:hover {
+  background-color: #0056b3 !important;
+}
+
+/* === INPUT FIELDS === */
+input, textarea {
+  outline: none;
+  font-size: 16px;
+}
+
+/* Material UI TextField Overrides */
+.MuiOutlinedInput-root {
+  border-radius: 8px !important;
+}
+
+/* === CONTAINERS === */
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* === CARD DESIGN === */
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* === ERROR MESSAGES === */
+.error-message {
+  color: red;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 10px;
+}

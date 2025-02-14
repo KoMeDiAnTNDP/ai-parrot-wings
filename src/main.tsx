@@ -1,30 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { UserProvider } from './UserContext';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
+import './styles.css'; // Global styles
 
-const theme = createTheme({
-  palette: {
-    primary: { main: "#1976d2" },
-    secondary: { main: "#ac3b61" }
-  },
-  typography: {
-    fontFamily: '"San Francisco", "Helvetica Neue", Arial, sans-serif'
-  }
-});
-
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <UserProvider>
-        <Router>
-          <App />
-        </Router>
-      </UserProvider>
-    </ThemeProvider>
+    <Provider store={store}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </Provider>
   </React.StrictMode>
 );

@@ -1,20 +1,22 @@
-// src/App.tsx
-import React, { useContext } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Registration from './components/Registration';
-import Login from './components/Login';
-import Home from './components/Home';
-import { UserContext } from './UserContext';
+import { useSelector } from 'react-redux';
+import { RootState } from './store';
+import Registration from './pages/Registration';
+import Login from './pages/Login';
+import Home from './pages/Home';
 
 const App: React.FC = () => {
-  const { user } = useContext(UserContext);
+  const token = useSelector((state: RootState) => state.auth.token);
 
   return (
     <Routes>
-      <Route path="/register" element={<Registration />} />
+      <Route path="/" element={<Registration />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/home" element={user ? <Home /> : <Navigate to="/login" />} />
-      <Route path="/" element={<Navigate to={user ? "/home" : "/login"} />} />
+      <Route 
+        path="/home" 
+        element={token ? <Home /> : <Navigate to="/login" replace />} 
+      />
     </Routes>
   );
 };
