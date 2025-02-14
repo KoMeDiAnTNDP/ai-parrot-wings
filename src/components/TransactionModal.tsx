@@ -28,11 +28,12 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ open, onClose }) =>
   const [amount, setAmount] = useState<string>('');
   const [error, setError] = useState<string>('');
 
+  // ✅ Fixed getUsers request format
   useEffect(() => {
-    if (recipientQuery.length > 0) {
+    if (recipientQuery.length > 1) {
       getUsers({ filter: recipientQuery, token })
         .unwrap()
-        .then(setRecipientOptions)
+        .then((users) => setRecipientOptions(users))
         .catch(() => setRecipientOptions([]));
     }
   }, [recipientQuery, getUsers, token]);

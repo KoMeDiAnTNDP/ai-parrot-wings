@@ -25,19 +25,19 @@ export const api = createApi({
       }),
     }),
     getUsers: builder.mutation({
-      query: (filter) => ({
+      query: ({ filter, token }) => ({
         url: '/api/protected/users/list',
         method: 'POST',
-        body: { filter },
-        headers: { Authorization: `Bearer ${filter.token}` },
+        body: { filter }, // ✅ Fixed body structure
+        headers: { Authorization: `Bearer ${token}` }, // ✅ Fixed headers
       }),
     }),
     createTransaction: builder.mutation({
-      query: (transactionData) => ({
+      query: ({ name, amount, token }) => ({
         url: '/api/protected/transactions',
         method: 'POST',
-        body: transactionData,
-        headers: { Authorization: `Bearer ${transactionData.token}` },
+        body: { name, amount },
+        headers: { Authorization: `Bearer ${token}` },
       }),
     }),
     getTransactions: builder.query({
@@ -53,7 +53,7 @@ export const {
   useRegisterUserMutation,
   useLoginUserMutation,
   useGetUserInfoQuery,
-  useGetUsersMutation,
+  useGetUsersMutation, // ✅ Ensure hook export
   useCreateTransactionMutation,
   useGetTransactionsQuery,
 } = api;
