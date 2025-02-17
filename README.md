@@ -1,3 +1,7 @@
+# AI research
+
+This project is entirely powered by ChatGPT (Modale: o4)
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
